@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>University Data</title>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;200&display=swap');
+
+
+        * {
+            font-family: 'Poppins', sans-serif;
+            color: #333;
+        }
+
+        #tableContainer {
+            padding: 0px 20px 20px 20px;
+            overflow-y: auto;
+            height: 60vh;
+        }
+
+        #tableContainer thead th {
+            position: sticky;
+            top: 0;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            color: #333;
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            text-align: left;
+            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+
+        }
+
+        table th {
+            background-color: #362F4B;
+            color: #fff;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-top: 1px solid #fff;
+            border-bottom: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        table tr:nth-child(even) td {
+            background-color: #f2f2f2;
+        }
+
+        table tr:hover td {
+            background-color: #ffedcc;
+        }
+
+        table td {
+            background-color: #fff;
+            font-weight: bold;
+            padding: 5px 10px;
+        }
+
+        h2,
+        h3 {
+            padding: 0px 20px;
+        }
+
+        .clsTitle {
+            text-align: right;
+        }
+
+        #tdLoading {
+            padding: 20px;
+            font-size: 20px;
+            text-align: center;
+        }
+
+        #btnExp {
+            height: 20px;
+            width: 20px;
+            size: 5px;
+            border-radius: 100%;
+            border: 1px solid gray;
+            cursor: pointer;
+        }
+
+        #divExp {
+            display: none;
+        }
+
+
+
+        /* * {
+            border: 1px solid red;
+        } */
+
+        .searchContainer {
+
+            padding: 10px 20px;
+
+
+            width: 90vw;
+            /* display: flex; */
+            display: flex;
+            justify-content: space-around
+        }
+
+        .mainContainer {
+            width: auto;
+
+        }
+
+        .container {
+            padding: 3px;
+            display: inline-flex;
+
+
+        }
+
+        .sortable {
+            cursor: pointer;
+            color: white;
+        }
+
+        input {
+            margin-left: 3px;
+        }
+
+        #iconName,
+        #iconCountry,
+        #iconDomain {
+            color: white;
+        }
+    </style>
+
+
+
+
+
+</head>
+
+<body>
+    <div class="clsTitle">
+        <h2>Software Engineering Test - Christian Foster <button id="btnExp" onclick="showExplanation()">?</button></h2>
+        <div id="divExp">
+            Explanation:
+            This page fetches list of Universities from <a href="https://github.com/Hipo/university-domains-list-api"
+                target="_blank">Hipo University Domain List API</a>.
+        </div>
+    </div>
+
+
+    <div class="searchContainer">
+        <div>
+            <h3>University Data</h3>
+
+        </div>
+        <div class="mainContainer">
+            <div class="container">
+                <label for="txtCountry">Country</label>
+                <br>
+                <input type="text" placeholder="Search..." id="txtCountry" value="Philippines">
+            </div>
+
+            <div class="container">
+                <label for="txtSearch">School</label>
+                <br>
+                <input type="text" placeholder="Search..." id="txtSearch" />
+            </div>
+
+            <div class="container">
+                <label for="txtSearch">&nbsp;</label>
+                <br>
+                <button id="btnSearch" onclick="populateTable()">Search</button>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="tableContainer">
+        <table id="tblUniversity">
+            <thead>
+                <tr>
+                    <th class="sortable">Name <span id="iconName">▲</span></th>
+                    <th class="sortable">Country <span id="iconCountry">▲</span></th>
+                    <th class="sortable">Domain <span id="iconDomain">▲</span></th>
+                </tr>
+            </thead>
+            <tbody id="tblBody">
+                <!-- Dito magpo-populate ang table data mula sa API call -->
+                <tr>
+                    <td id="tdLoading" colspan="12">Loading data...</td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        var txtCountry;
+        var strSearch;
+
+        populateTable();
+
+        async function populateTable() {
+
+            //reset table
+            document.getElementById("tblBody").innerHTML = '<tr><td id="tdLoading" colspan="12">Loading data...</td></tr>';
+
+
+            try {
+                const data = await fetchData();
+                if (data) {
+                    document.getElementById("tdLoading").style.display = "none";
+                    const tableBody = document.querySelector('#tblUniversity tbody');
+
+                    data.forEach((university) => {
+                        const row = tableBody.insertRow();
+                        row.insertCell().textContent = university.name;
+                        row.insertCell().textContent = university.country;
+                        row.insertCell().textContent = university.web_pages[0];
+                    });
+                } else {
+                    // Handle case when data is empty or API returns an error
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                // Handle error
+            }
+        }
+
+        async function fetchData() {
+
+
+            try {
+                txtCountry = document.getElementById("txtCountry").value;
+                strSearch = document.getElementById("txtSearch").value;
+                var strQuery = 'http://universities.hipolabs.com/search?name=' + strSearch + '&country=' + txtCountry;
+
+                const response = await fetch(strQuery);
+
+                document.getElementById("tdLoading").style.display = "block";
+
+                const data = await response.json();
+
+                return data;
+            } catch (error) {
+
+
+                document.getElementById("tdLoading").style.display = "block";
+                document.getElementById("tdLoading").innerHTML = "Error fetching data: " + error;
+                console.error('Error fetching data:', error);
+                return null;
+            }
+        }
+
+
+
+
+
+        function showExplanation() {
+            if (document.getElementById("divExp").style.display == "block") {
+                document.getElementById("divExp").style.display = "none";
+            }
+            else {
+                document.getElementById("divExp").style.display = "block";
+            }
+        }
+
+        //////////////////////////////////
+
+        function sortTable(columnIndex) {
+            const table = document.getElementById("tblUniversity");
+            const rows = table.rows;
+            const data = [];
+
+            for (let i = 1; i < rows.length; i++) {
+                const cells = rows[i].cells;
+                const rowData = [];
+                for (let j = 0; j < cells.length; j++) {
+                    rowData.push(cells[j].textContent);
+                }
+                data.push(rowData);
+            }
+
+            data.sort((a, b) => {
+                if (columnIndex === 0 || columnIndex === 2) {
+                    return a[columnIndex].localeCompare(b[columnIndex]);
+                } else {
+                    return a[columnIndex] > b[columnIndex] ? 1 : -1;
+                }
+            });
+
+            // Reorder the table rows based on the sorted data
+            for (let i = 1; i < rows.length; i++) {
+                const cells = rows[i].cells;
+                for (let j = 0; j < cells.length; j++) {
+                    cells[j].textContent = data[i - 1][j];
+                }
+            }
+        }
+
+        function activateTableSorting() {
+            const headerCells = document.querySelectorAll('#tblUniversity th.sortable');
+
+            headerCells.forEach((cell) => {
+                cell.addEventListener('click', () => {
+                    const columnIndex = cell.dataset.column;
+                    sortTable(columnIndex);
+                });
+            });
+
+            // headerCells.
+        }
+
+        // Call this function to activate table sorting on header click
+        activateTableSorting();
+
+        const sortableHeaders = document.getElementsByClassName("sortable");
+
+        for (const header of sortableHeaders) {
+            header.addEventListener("click", function () {
+
+                const icon = header.querySelector("span");
+                const iconCode = icon.textContent.charCodeAt(0);
+
+
+
+                const columnIndex = Array.from(header.parentNode.children).indexOf(header);
+                // alert(`Clicked on column ${columnIndex + 1}`);
+
+
+
+                if (icon.innerHTML == "▲") {
+                    icon.innerHTML = "▼";
+                }
+
+                else if (icon.innerHTML == "▼") {
+                    icon.innerHTML = "▲";
+                }
+                // if (iconCode === 9660) { // "&#x25BC;" has Unicode code point 9660
+                //     icon.innerHTML = "&#x25B2;";
+                // }
+
+            });
+        }
+
+    </script>
+</body>
+
+</html>
